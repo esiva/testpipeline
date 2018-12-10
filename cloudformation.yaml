@@ -1,0 +1,75 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+Description: siva_pipeline_test lambda function
+
+Resources:
+
+################
+### Function ###
+################
+
+  LambdaSivaPipelineTest:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName: siva_pipeline_test
+      Description: Keep API gateway warm i.e. invoke them in a regular interval
+      Handler: index.handler
+      Runtime: nodejs8.10
+      CodeUri: ./
+      MemorySize: 128
+      Timeout: 3
+      Role: !GetAtt RoleSivaPipelineTest.Arn
+
+############
+### Role ###
+############
+
+  RoleSivaPipelineTest:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: siva_pipeline_test
+      Path: /service-role/
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: ctn_log_access
+          PolicyDocument: 
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: logs:CreateLogGroup
+                Resource: !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: 
+                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/siva_pipeline_test:*
+
+#############
+### Alias ###
+#############
+
+  LambdaAliasSivaPipelineTestDev:
+    Type: AWS::Lambda::Alias
+    Properties: 
+      Name: dev
+      FunctionName: !Ref LambdaSivaPipelineTest
+      FunctionVersion: $LATEST
+  LambdaAliasSivaPipelineTestTest:
+    Type: AWS::Lambda::Alias
+    Properties: 
+      Name: test
+      FunctionName: !Ref LambdaSivaPipelineTest
+      FunctionVersion: $LATEST
+  LambdaAliasSivaPipelineTestProd:
+    Type: AWS::Lambda::Alias
+    Properties: 
+      Name: prod
+      FunctionName: !Ref LambdaSivaPipelineTest
+      FunctionVersion: $LATEST

@@ -1,0 +1,22 @@
+version: 0.1
+
+phases:
+  install:
+    commands:
+      - echo "nothing to do in install"
+  pre_build:
+    commands:
+      - echo "pre_build - can be used for npm install"
+      - echo "dependencies install completed `date`"
+  build:
+    commands:
+      - echo "Starting build `date` in `pwd`"
+      - aws cloudformation package --template-file cloudformation.yaml --output-template-file packaged.yaml --s3-bucket siva-pipeline-test
+  post_build:
+    commands:
+      - echo "build completed on `date`"
+
+artifacts:
+  files:
+    - packaged.yaml
+  discard-paths: yes
